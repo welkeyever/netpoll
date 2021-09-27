@@ -123,6 +123,7 @@ func (b *LinkBuffer) Peek(n int) (p []byte, err error) {
 	l := node.Len()
 	if l == 0 {
 		node = node.next
+		l = node.Len()
 	}
 	if l >= n {
 		return node.Peek(n), nil
