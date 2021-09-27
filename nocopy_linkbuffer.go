@@ -17,6 +17,7 @@
 package netpoll
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"reflect"
@@ -120,29 +121,13 @@ func (b *LinkBuffer) Peek(n int) (p []byte, err error) {
 	var node = b.read
 	// single node
 	l := node.Len()
+	if l == 0 {
+		node = node.next
+	}
 	if l >= n {
 		return node.Peek(n), nil
 	}
-	// multiple nodes
-	var pIdx int
-	if block1k < n && n <= mallocMax {
-		p = malloc(n, n)
-		b.caches = append(b.caches, p)
-	} else {
-		p = make([]byte, n)
-	}
-	for ack := n; ack > 0; ack = ack - l {
-		l = node.Len()
-		if l >= ack {
-			pIdx += copy(p[pIdx:], node.Peek(ack))
-			break
-		} else if l > 0 {
-			pIdx += copy(p[pIdx:], node.Peek(l))
-		}
-		node = node.next
-	}
-	_ = pIdx
-	return p, nil
+	return node.Peek(l), bufio.ErrBufferFull
 }
 
 // Skip implements Reader.
